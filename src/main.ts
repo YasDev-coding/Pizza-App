@@ -1,55 +1,79 @@
-type pizza = {
+type Pizza = {
+  id: number;
   name: string;
   price: number;
 };
-type order = {
-  pizza: pizza;
-  status: string;
-  orderId: number;
+type Order = {
+  pizza: Pizza;
+  status: "ordered" | "completed";
+  id: number;
 };
 
-const menu: pizza[] = [
-  { name: "Margherita", price: 8 },
-  { name: "Pepperoni", price: 10 },
-  { name: "Hawaiian", price: 10 },
-  { name: "Veggie", price: 9 },
+let pizzaId = 0;
+
+const menu: Pizza[] = [
+  { id: pizzaId++, name: "Margherita", price: 8 },
+  { id: pizzaId++, name: "Pepperoni", price: 10 },
+  { id: pizzaId++, name: "Hawaiian", price: 10 },
+  { id: pizzaId++, name: "Veggie", price: 9 },
 ];
 
 let cashInRegister = 100;
-const orderQueue: order[] = [];
+const orderHistory: Order[] = [];
 let orderId = 0;
-function addNewPizza(pizzaObj: pizza) {
-  menu.push(pizzaObj);
+
+function addNewPizza(pizzaObj: Omit<Pizza, "id">): Pizza {
+  const addedPizzaObj = { id: pizzaId++, ...pizzaObj };
+  menu.push(addedPizzaObj);
+  return addedPizzaObj;
 }
 
-function placeOrder(orderedPizza: string) {
+function placeOrder(orderedPizza: string): Order | undefined {
   const selectedPizza = menu.find((pizza) => pizza.name === orderedPizza);
   if (selectedPizza) {
-    if (cashInRegister >= selectedPizza.price) {
-      cashInRegister += selectedPizza.price;
-      const newOrder: order = {
-        pizza: selectedPizza,
-        status: "ordered",
-        orderId: (orderId += 1),
-      };
-      orderQueue.push(newOrder);
+    cashInRegister += selectedPizza.price;
+    const newOrder: Order = {
+      pizza: selectedPizza,
+      status: "ordered",
+      id: (orderId += 1),
+    };
+    orderHistory.push(newOrder);
 
-      return newOrder;
-    } else {
-      console.log("Insufficient funds to place the order.");
-    }
+    return newOrder;
   } else {
     console.log("Pizza not found in the menu.");
   }
 }
 
-function completeOrder(orderId: number) {
-  const order = orderQueue.find((order) => order.orderId === orderId);
+function completeOrder(orderId: number): Order | undefined {
+  const order = orderHistory.find((order) => order.id === orderId);
   if (order) {
     order.status = "completed";
     return order;
   } else {
     console.log("Order not found.");
+  }
+}
+
+function getPizzaDetail(identifier: number | string): Pizza | undefined {
+  if (typeof identifier === "number") {
+    const pizza = menu.find((pizza) => pizza.id === identifier);
+    if (!pizza) {
+      console.log("Pizza not found in the menu.");
+      return;
+    }
+    return pizza;
+  } else if (typeof identifier === "string") {
+    const pizza = menu.find(
+      (pizza) => pizza.name.toLowerCase === identifier.toLowerCase
+    );
+    if (!pizza) {
+      console.log("Pizza not found in the menu.");
+      return;
+    }
+    return pizza;
+  } else {
+    throw new TypeError("Parameter `identifier` must be a string or a number");
   }
 }
 
@@ -63,5 +87,7 @@ placeOrder("Spicy Sausage");
 completeOrder(1);
 
 console.log("Menu:", menu);
-console.log("Order Queue:", orderQueue);
+console.log("Order Queue:", orderHistory);
 console.log("Cash in Register:", cashInRegister);
+getPizzaDetail(5);
+getPizzaDetail("Pepperoni");
